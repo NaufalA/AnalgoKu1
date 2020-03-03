@@ -6,13 +6,11 @@
 
 using namespace std;
 
-const int N = 5;
+typedef vector<string> prefList;
+typedef map<string, prefList> prefMap;
+typedef map<string, string> pairs;
 
-typedef vector<int> prefList;
-typedef map<int, prefList> prefMap;
-typedef map<int, int> pairs;
-
-bool prefers(prefList &prefer, int man, int partner)
+bool prefers(prefList &prefer, string man, string partner)
 {
     for (auto i : prefer)
     {
@@ -24,55 +22,65 @@ bool prefers(prefList &prefer, int man, int partner)
     return false;
 }
 
-void GS(queue<int> freemen, pairs &couples, prefMap mPref, prefMap wPref)
+pairs GS(queue<string> freemen, prefMap mPref, prefMap wPref)
 {
+    pairs couples;
     while (!freemen.empty())
     {
-        int currman = freemen.front();
+        string currman = freemen.front();
         prefList manpref = mPref[currman];
+        cout << "freeman " << currman << " arrived\n";
         for (auto i = manpref.begin(); i != manpref.end(); i++)
         {
-            int currpref = *i;
-            if(couples.find(currpref) == couples.end())
+            string currpref = *i;
+            cout << currman << " proposed to " << currpref << "\n";
+            if (couples.find(currpref) == couples.end())
             {
-                couples.insert(pair<int,int>(currpref,currman));
+                cout << currpref << " accepted " << currman << "\n";
+                couples.insert(pair<string, string>(currpref, currman));
                 break;
             }
 
-            int partner = couples[currpref];
+            string partner = couples[currpref];
+            cout << "turns out " << currpref << " already with " << partner << "\n";
 
-            if(prefers(wPref[currpref], currman, partner))
+            if (prefers(wPref[currpref], currman, partner))
             {
+                cout << currpref << " left " << partner << " for " << currman << "\n";
                 freemen.push(partner);
                 couples[currpref] = currman;
                 break;
             }
+            else
+            {
+                cout << currman << " was rejected\n";
+            }
         }
         freemen.pop();
     }
+    return couples;
 }
 
 int main()
 {
-    string M[]{"Victor", "Wyatt", "Xavier", "Yancy", "Zeus"};
-    string W[]{"Amy", "Bertha", "Claire", "Diane", "Erika"};
+    const int N = 5;
 
     prefMap men_pref, women_pref;
-    queue<int> freemen;
+    queue<string> freemen;
 
-    int menPref[N][N + 1] = {
-        {0, 1, 0, 3, 4, 2},
-        {1, 3, 1, 0, 2, 4},
-        {2, 1, 4, 2, 3, 0},
-        {3, 0, 3, 2, 1, 4},
-        {4, 1, 3, 0, 4, 2}};
+    string menPref[N][N + 1] = {
+        {"Victor", "Bertha", "Amy", "Diane", "Erika", "Claire"},
+        {"Wyatt", "Diane", "Bertha", "Amy", "Claire", "Erika"},
+        {"Xavier", "Bertha", "Erika", "Claire", "Diane", "Amy"},
+        {"Yancy", "Amy", "Diane", "Claire", "Bertha", "Erika"},
+        {"Zeus", "Bertha", "Diane", "Amy", "Erika", "Claire"}};
 
-    int womenPref[N][N + 1]{
-        {0, 4, 0, 1, 3, 2},
-        {1, 2, 1, 3, 0, 4},
-        {2, 1, 2, 3, 4, 0},
-        {3, 0, 4, 3, 2, 1},
-        {4, 3, 1, 4, 2, 0}};
+    string womenPref[N][N + 1]{
+        {"Amy", "Zeus", "Victor", "Wyatt", "Yancy", "Xavier"},
+        {"Wyatt", "Xavier", "Wyatt", "Yancy", "Victor", "Zeus"},
+        {"Claire", "Wyatt", "Xavier", "Yancy", "Zeus", "Victor"},
+        {"Diane", "Victor", "Zeus", "Yancy", "Xavier", "Wyatt"},
+        {"Erika", "Yancy", "Wyatt", "Zeus", "Xavier", "Victor"}};
 
     for (int i = 0; i < N; i++)
     {
@@ -86,10 +94,10 @@ int main()
 
     for (int i = 0; i < 5; i++)
     {
-        cout << M[i] << " | ";
+        cout << menPref[i][0] << " | ";
         for (int j = 0; j < 5; j++)
         {
-            cout << W[menPref[i][j]] << " | ";
+            cout << menPref[i][j] << " | ";
         }
         cout << "\n";
     }
@@ -98,21 +106,19 @@ int main()
 
     for (int i = 0; i < 5; i++)
     {
-        cout << W[i] << " | ";
+        cout << womenPref[0][i] << " | ";
         for (int j = 0; j < 5; j++)
         {
-            cout << M[womenPref[i][j]] << " | ";
+            cout << womenPref[i][j] << " | ";
         }
         cout << "\n";
     }
 
-    pairs couples;
-
-    GS(freemen, couples, men_pref, women_pref);
+    pairs couples = GS(freemen, men_pref, women_pref);
 
     cout << "Final Pairs :\n";
-    for(auto couple : couples)
+    for (auto couple : couples)
     {
-        cout << M[couple.second] << " >< " << W[couple.first] << "\n";
+        cout << couple.second << " >< " << couple.first << "\n";
     }
 }
